@@ -99,7 +99,25 @@ const Posts = require('../db.js');
     }
   });
 
+  //NEED TO RETURN DELETED POST OBJECT
   // | DELETE | /api/posts/:id | Removes the post with the specified id and returns the **deleted post object**. You may need to make additional calls to the database in order to satisfy this requirement. |
+  router.delete('/:id', (req, res) => {
+    Posts.remove(req.params.id)
+    .then(post => {
+      if (post > 0) {
+        res.status(200).json({ message: 'Removed Post' });
+      } else {
+        res.status(404).json({ message: 'The post could not be found' });
+      }
+    })
+    .catch(error => {
+      // log error to database
+      console.log(error);
+      res.status(500).json({
+        message: 'Error removing the post',
+      });
+    });
+  });
 
   // | PUT | /api/posts/:id | Updates the post with the specified `id` using data from the `request body`. Returns the modified document, **NOT the original**. |
 
