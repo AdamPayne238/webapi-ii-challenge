@@ -77,27 +77,46 @@ const Posts = require('../db.js');
   });
                             
   //NOT working
-  // | POST | /api/posts/:id/comments | Creates a comment for the post with the specified id using information sent inside of the `request body`.  
+  // | POST | /api/posts/:id/comments | Creates a comment for the post with the specified id using information sent inside of the `request body`.
+  // router.post('/:id/comments', (req, res) => {
+  //   const id = req.params.id;
+  //   const text = {...req.body, post_id:id};
+
+  //   if( !text ){
+  //     res.status(500).json({ error: "Comments Requires Text"});
+  //   } else {
+  //     Posts.insertComment( text )
+  //     .then(comment => {
+  //       res.status(200).json(comment)
+  //     })
+  //     .catch(err => {
+  //       res.status(500).json(err);
+  //     })
+  //   }
+  // });
+
   router.post('/:id/comments', (req, res) => {
-    const { text } = req.body;
-    if( !text ){
-        res.status(500).json({ error: "Comments Requires Text"});
-    } else {
-        Posts.insertComment({ text })
-        .then(({ id }) => {
-            Posts.findPostComments(id)
-            .then(comment => {
-                res.status(200).json(comment);
-            })
-            .catch(err => {
-                res.status(500).json({ err: "comment info not found"});
-            });
+    const id = req.params.id;
+    const text = {...req.body, post_id: id}
+
+    Posts.findById(id)
+    .then(post => {
+      if(post){
+        Posts.insertComment(text)
+        .then(comment => {
+          res.status(200).json(comment)
         })
-        .catch(err => {
-            res.status(500).json({ err: "error adding comment"})
+        .catch(error => {
+          res.status(500).json("Requires Text");
         })
-    }
+      } else {
+        res.status(500).json({ message: "Does not exist"})
+      }
+    })
+
   });
+  
+
 
   //NEED TO RETURN DELETED POST OBJECT
   // | DELETE | /api/posts/:id | Removes the post with the specified id and returns the **deleted post object**. You may need to make additional calls to the database in order to satisfy this requirement. |
@@ -120,6 +139,20 @@ const Posts = require('../db.js');
   });
 
   // | PUT | /api/posts/:id | Updates the post with the specified `id` using data from the `request body`. Returns the modified document, **NOT the original**. |
+  router.put('/:id', (req, res) => {
+    const { title, contents } = req.body;
+    const id = req.params.id;
+    
+    if( title && contents ){
+      Posts.update(id, {title, contents})
+      .then(post => {
+        res.status(200).json(post)
+      })
+      .catch(err => {
+        res.status(500).json({ err: "Could not be modified"})
+      })
+    }
+  })
 
 
   module.exports = router;
